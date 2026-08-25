@@ -366,18 +366,34 @@
 		const guestCount = document.getElementById('guestCount');
 		const confirmationList = document.getElementById('confirmationList');
 		const storedGifts = JSON.parse(localStorage.getItem('chaCasaNovaExtraGifts') || '[]');
-		storedGifts.forEach((gift) => {
-			const category = [...document.querySelectorAll('.gift-category')].find((section) => section.querySelector('h3').textContent === gift.category);
-			if (category) {
-				const item = document.createElement('li');
-				item.textContent = gift.name;
-				category.querySelector('ul').appendChild(item);
-			}
-		});
-		let presentItems = [...document.querySelectorAll('.gift-category li')];
 		const storedGuests = JSON.parse(localStorage.getItem('chaCasaNovaGuests') || '[]');
 		const savedGuests = storedGuests.map((guest) => typeof guest === 'string' ? { name: guest, gift: '' } : guest);
 		let remoteReady = false;
+		const giftsTable = `${supabaseUrl}/rest/v1/cha_casa_presentes`;
+
+		function syncGiftCatalog() {
+			const seen = new Set();
+			[...document.querySelectorAll('.gift-category li')].forEach((item) => {
+				const category = item.closest('.gift-category');
+				const categoryName = category?.querySelector('h3')?.textContent?.trim();
+				if (categoryName) {
+					seen.add(`${categoryName}::${item.textContent.trim()}`);
+				}
+			});
+			storedGifts.forEach((gift) => {
+				const key = `${gift.category}::${gift.name}`;
+				if (seen.has(key)) return;
+				const category = [...document.querySelectorAll('.gift-category')].find((section) => section.querySelector('h3').textContent === gift.category);
+				if (!category) return;
+				const item = document.createElement('li');
+				item.textContent = gift.name;
+				category.querySelector('ul').appendChild(item);
+				seen.add(key);
+			});
+			presentItems = [...document.querySelectorAll('.gift-category li')];
+		}
+		let presentItems = [...document.querySelectorAll('.gift-category li')];
+		syncGiftCatalog();
 		const supabaseHeaders = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' };
 
 		function renderGuests() {
@@ -448,6 +464,34 @@
 			}
 		}
 
+		async function loadSharedGifts() {
+			try {
+				const response = await fetch(`${giftsTable}?select=name,category&order=created_at.asc`, { headers: supabaseHeaders });
+				if (!response.ok) return;
+				const remoteGifts = await response.json();
+				const mergedGifts = [
+					...storedGifts,
+					...remoteGifts.map((gift) => ({ name: gift.name, category: gift.category }))
+				];
+				const uniqueGifts = [];
+				const seen = new Set();
+				mergedGifts.forEach((gift) => {
+					if (!gift?.name || !gift?.category) return;
+					const key = `${gift.category}::${gift.name}`;
+					if (seen.has(key)) return;
+					seen.add(key);
+					uniqueGifts.push({ name: gift.name, category: gift.category });
+				});
+				storedGifts.splice(0, storedGifts.length, ...uniqueGifts);
+				localStorage.setItem('chaCasaNovaExtraGifts', JSON.stringify(storedGifts));
+				syncGiftCatalog();
+				renderAdminGifts();
+				renderGiftOptions();
+			} catch (error) {
+				// Continue usando a lista local até a sincronização remota voltar.
+			}
+		}
+
 		function renderConfirmationList() {
 			confirmationList.replaceChildren();
 			if (!savedGuests.length) {
@@ -482,20 +526,35 @@
 				: 'Nenhum presente novo adicionado.';
 		}
 
-		document.getElementById('adminGiftForm').addEventListener('submit', (event) => {
+		document.getElementById('adminGiftForm').addEventListener('submit', async (event) => {
 			event.preventDefault();
 			const name = document.getElementById('newGift').value.trim();
 			const categoryName = document.getElementById('newGiftCategory').value;
 			if (!name) return;
 			const category = [...document.querySelectorAll('.gift-category')].find((section) => section.querySelector('h3').textContent === categoryName);
-			const item = document.createElement('li');
-			item.textContent = name;
-			category.querySelector('ul').appendChild(item);
-			presentItems = [...document.querySelectorAll('.gift-category li')];
-			storedGifts.push({ name, category: categoryName });
-			localStorage.setItem('chaCasaNovaExtraGifts', JSON.stringify(storedGifts));
+			if (!category) return;
+			const giftData = { name, category: categoryName };
+			const giftKey = `${categoryName}::${name}`;
+			const alreadyExists = storedGifts.some((gift) => `${gift.category}::${gift.name}` === giftKey);
+			if (!alreadyExists) {
+				storedGifts.push(giftData);
+				localStorage.setItem('chaCasaNovaExtraGifts', JSON.stringify(storedGifts));
+			}
+			syncGiftCatalog();
 			document.getElementById('newGift').value = '';
-			adminMessage.textContent = 'Presente adicionado com sucesso.';
+			try {
+				const response = await fetch(giftsTable, {
+					method: 'POST',
+					headers: { ...supabaseHeaders, Prefer: 'return=minimal' },
+					body: JSON.stringify(giftData)
+				});
+				if (!response.ok) {
+					throw new Error('gift-sync-failed');
+				}
+				adminMessage.textContent = 'Presente adicionado com sucesso.';
+			} catch (error) {
+				adminMessage.textContent = 'Presente salvo localmente. Sincronização com todos os navegadores falhou.';
+			}
 			renderAdminGifts();
 			renderGiftOptions();
 		});
@@ -505,7 +564,9 @@
 		renderGiftOptions();
 		renderAdminGifts();
 		loadSharedReservations();
+		loadSharedGifts();
 		setInterval(loadSharedReservations, 8000);
+		setInterval(loadSharedGifts, 15000);
 	</script>
 </body>
 </html>
