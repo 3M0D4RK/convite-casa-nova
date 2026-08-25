@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chá de casa nova</title>
+	<style>
+		:root { --olive: #3d4522; --ink: #30351e; --paper: #f4eee1; --sage: #899778; --line: rgba(61, 69, 34, .25); --shadow: 0 22px 70px rgba(46, 48, 28, .25); }
+		* { box-sizing: border-box; }
+		body { margin: 0; min-height: 100vh; color: var(--ink); background: #d8d1bd; font-family: 'Trebuchet MS', Arial, sans-serif; }
+		.page { min-height: 100vh; display: grid; place-items: center; padding: 28px; background: radial-gradient(circle at 15% 20%, rgba(137, 151, 120, .18), transparent 28%), radial-gradient(circle at 85% 80%, rgba(175, 146, 104, .16), transparent 30%), #d8d1bd; }
+		.invite { position: relative; width: min(100%, 540px); height: min(100vh, 810px); overflow: hidden; background: var(--paper); box-shadow: var(--shadow); animation: appear .7s ease both; }
+		.invite::after { content: ''; position: absolute; inset: 0; z-index: 0; background: url('capa.jpg') center / contain no-repeat; animation: houseBreath 6s ease-in-out infinite; transform-origin: center center; }
+		.invite::before { content: ''; position: absolute; inset: 14px; border: 1px solid var(--line); pointer-events: none; }
+		.admin-access { position: absolute; top: 28px; left: 28px; z-index: 4; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgba(67, 70, 38, .22); border-radius: 50%; color: var(--olive); background: rgba(239, 231, 210, .9); box-shadow: 0 4px 12px rgba(62, 63, 39, .14); font: 700 10px Arial, sans-serif; letter-spacing: .5px; text-decoration: none; transition: transform .2s ease, background .2s ease; }
+		.admin-access:hover { background: #e6dec6; transform: rotate(-8deg) scale(1.06); }
+		.admin-access:focus-visible { outline: 3px solid #9aa477; outline-offset: 3px; }
+		.music-toggle { position: absolute; top: 28px; right: 28px; z-index: 4; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgba(67, 70, 38, .22); border-radius: 50%; color: var(--olive); background: rgba(239, 231, 210, .9); box-shadow: 0 4px 12px rgba(62, 63, 39, .14); cursor: pointer; font: 700 10px Arial, sans-serif; letter-spacing: .3px; transition: transform .2s ease, background .2s ease; }
+		.music-toggle:hover { background: #e6dec6; transform: rotate(8deg) scale(1.06); }
+		.music-toggle:focus-visible { outline: 3px solid #9aa477; outline-offset: 3px; }
+		.music-toggle.playing { color: #f7f3e8; background: var(--olive); }
+		.share-access { position: absolute; top: 80px; right: 28px; z-index: 4; display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid rgba(67, 70, 38, .22); border-radius: 50%; color: var(--olive); background: rgba(239, 231, 210, .9); box-shadow: 0 4px 12px rgba(62, 63, 39, .14); cursor: pointer; font: 700 17px Arial, sans-serif; transition: transform .2s ease, background .2s ease; }
+		.share-access:hover { background: #e6dec6; transform: rotate(-8deg) scale(1.06); }
+		.share-access:focus-visible { outline: 3px solid #9aa477; outline-offset: 3px; }
+		.countdown { position: absolute; z-index: 2; top: 3.8%; left: 50%; color: var(--olive); font: 700 clamp(15px, 2.1vw, 24px) Arial, sans-serif; letter-spacing: 1px; text-align: center; text-shadow: 0 1px 2px rgba(255, 253, 245, .7); white-space: nowrap; transform: translateX(-50%); }
+		.guest-count { position: absolute; z-index: 2; top: 1.5%; left: 50%; color: #77765e; font: 600 clamp(11px, 1.4vw, 15px) 'Trebuchet MS', Arial, sans-serif; letter-spacing: .5px; text-align: center; white-space: nowrap; transform: translateX(-50%); }
+		.welcome-screen { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 24px; overflow: hidden; background: radial-gradient(circle at 15% 15%, rgba(137, 151, 120, .28), transparent 28%), radial-gradient(circle at 86% 84%, rgba(180, 145, 105, .2), transparent 30%), var(--paper); transition: opacity .45s ease, visibility .45s ease; }
+		.welcome-screen.started { opacity: 0; visibility: hidden; pointer-events: none; }
+		.welcome-content { position: relative; width: min(100%, 520px); padding: clamp(54px, 10vh, 92px) 30px; border: 1px solid var(--line); text-align: center; background: rgba(255, 253, 245, .34); box-shadow: 0 18px 50px rgba(68, 67, 40, .1); }
+		.welcome-screen.started .welcome-content { animation: envelopeOpen .55s ease both; }
+		.welcome-content::before { content: ''; position: absolute; inset: 12px; border: 1px solid rgba(61, 69, 34, .18); pointer-events: none; }
+		.welcome-content h1 { position: relative; margin: 0; color: var(--olive); font-family: 'Palatino Linotype', 'Book Antiqua', Georgia, serif; font-size: clamp(40px, 8vw, 78px); font-weight: 400; line-height: .9; }
+		.welcome-content p { position: relative; margin: 22px 0 30px; color: #77765e; font-size: 16px; line-height: 1.5; }
+		.date-seal { position: relative; display: grid; width: 70px; height: 70px; margin: 0 auto 22px; place-items: center; border: 1px solid rgba(61, 69, 34, .35); border-radius: 50%; color: var(--olive); font: 700 11px/1.35 Arial, sans-serif; letter-spacing: 1px; }
+		.date-seal::before { content: ''; position: absolute; inset: 5px; border: 1px solid rgba(61, 69, 34, .2); border-radius: 50%; }
+		.start-button { position: relative; padding: 15px 30px; border: 0; border-radius: 999px; color: #f7f3e8; background: var(--olive); cursor: pointer; font: 700 12px Arial, sans-serif; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 5px 15px rgba(46, 48, 28, .2); transition: transform .2s ease, box-shadow .2s ease; }
+		.start-button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(46, 48, 28, .28); }
+		.start-button:focus-visible { outline: 3px solid #9aa477; outline-offset: 3px; }
+		.confetti { position: absolute; top: -14px; left: 50%; width: 9px; height: 18px; opacity: 0; pointer-events: none; animation: confettiFall 1.8s ease-out forwards; }
+		.confetti::before { content: ''; display: block; width: 100%; height: 100%; background: var(--confetti-color); transform: rotate(var(--confetti-rotate)); }
+		.welcome-leaves { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+		.welcome-leaves .leaf { opacity: .7; }
+		.hero-content { display: contents; }
+		.buttons { position: absolute; z-index: 2; left: 5%; right: 5%; bottom: 17%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.5%; animation: buttonsReveal .8s .35s ease both; }
+		.button { min-width: 0; padding: 14px 8px; border: 1px solid rgba(67, 70, 38, .18); border-radius: 999px; color: var(--olive); background: rgba(239, 231, 210, .92); box-shadow: 0 4px 10px rgba(62, 63, 39, .12); font: 700 clamp(9px, 1.2vw, 13px)/1.1 'Trebuchet MS', Arial, sans-serif; text-align: center; text-decoration: none; transition: transform .2s ease, filter .2s ease; animation: buttonFloat var(--button-speed) ease-in-out infinite; }
+		.button:first-child { color: #f7f3e8; background: rgba(57, 65, 29, .94); --button-speed: 4.8s; animation: buttonFloat var(--button-speed) ease-in-out infinite, buttonPulse 3.2s 1.4s ease-in-out infinite; }
+		.button:nth-child(2) { --button-speed: 5.6s; animation-delay: .12s; } .button:nth-child(3) { --button-speed: 4.2s; animation-delay: .24s; } .button:nth-child(4) { --button-speed: 6.1s; animation-delay: .36s; }
+		.button:hover { filter: brightness(1.08); transform: translateY(-3px); }
+		.button:focus-visible { outline: 3px solid #9aa477; outline-offset: 3px; }
+		.agenda-confirm { display: inline-block; margin-top: 18px; }
+		.kicker { margin: 0 0 12px; color: #7b8060; font: 700 11px Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase; }
+		.title { max-width: 700px; margin: 0; color: var(--olive); font-family: 'Palatino Linotype', 'Book Antiqua', Georgia, serif; font-size: clamp(52px, 8vw, 96px); font-weight: 400; line-height: .87; }
+		.names { margin: 20px 0 0; color: var(--olive); font-family: 'Palatino Linotype', 'Book Antiqua', Georgia, serif; font-size: clamp(28px, 4vw, 48px); font-style: italic; font-weight: 400; }
+		.subtitle { margin: 11px 0 0; color: #787657; font-size: clamp(15px, 2vw, 20px); letter-spacing: 1px; }
+		.house { position: relative; width: min(100%, 430px); height: 220px; margin: 26px 0 20px; }
+		.house-body { position: absolute; left: 12%; right: 12%; bottom: 8px; height: 125px; border: 4px solid #535a36; border-top: 0; background: #ddd5bd; box-shadow: inset 0 0 0 6px rgba(255, 252, 238, .35); }
+		.roof { position: absolute; left: 8%; right: 8%; top: 28px; height: 145px; border-top: 6px solid #535a36; transform: rotate(0deg); clip-path: polygon(50% 0, 100% 65%, 96% 69%, 50% 13%, 4% 69%, 0 65%); background: #89916d; }
+		.door { position: absolute; left: calc(50% - 27px); bottom: 0; width: 54px; height: 84px; border: 4px solid #535a36; border-bottom: 0; border-radius: 28px 28px 0 0; background: #aeb29a; }
+		.window { position: absolute; bottom: 54px; width: 54px; height: 48px; border: 4px solid #535a36; background: linear-gradient(90deg, transparent 46%, #535a36 46% 54%, transparent 54%), linear-gradient(0deg, transparent 46%, #535a36 46% 54%, transparent 54%), #f7f0d8; }
+		.window.left { left: 18%; } .window.right { right: 18%; }
+		.heart { position: absolute; top: 74px; left: calc(50% - 13px); color: #a46b5b; font-size: 28px; }
+		.event { display: flex; align-items: center; gap: 18px; margin-bottom: 26px; color: var(--olive); font-size: clamp(16px, 2vw, 21px); }
+		.event span { display: block; width: 7px; height: 7px; border-radius: 50%; background: #a88964; }
+		@keyframes appear { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+		@keyframes houseBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
+		.presentes-page { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 18px; background: rgba(45, 47, 30, .82); opacity: 0; pointer-events: none; visibility: hidden; transform: scale(1.04) translateY(12px); transition: opacity .4s ease, transform .4s cubic-bezier(.22, .8, .25, 1), visibility .4s; }
+		.presentes-page:target { opacity: 1; pointer-events: auto; visibility: visible; transform: scale(1) translateY(0); }
+		.presentes-card { position: relative; z-index: 2; width: min(100%, 980px); max-height: calc(100vh - 36px); padding: 34px clamp(20px, 4vw, 54px) 28px; overflow-y: auto; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); }
+		.presentes-card h2 { margin: 0; color: var(--olive); font-size: clamp(30px, 5vw, 54px); font-weight: 400; text-align: center; }
+		.presentes-card > p { margin: 8px 0 26px; color: #77765e; font: 16px Arial, sans-serif; text-align: center; }
+		.presentes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px 44px; }
+		.gift-category { padding-top: 17px; border-top: 1px solid var(--line); }
+		.gift-category h3 { margin: 0 0 10px; color: var(--olive); font-size: 24px; font-weight: 400; }
+		.gift-category ul { columns: 2; margin: 0; padding-left: 22px; color: #4e5639; font: 14px/1.55 Arial, sans-serif; }
+		.gift-category li { break-inside: avoid; margin-bottom: 3px; }
+		.gift-category li.claimed { color: #8b8b77; text-decoration: line-through; }
+		.gift-category li.claimed::after { content: ' (reservado)'; color: #9a745f; font-size: 11px; text-decoration: none; }
+		.pix-box { margin: 28px auto 0; padding: 16px 22px; border: 1px solid var(--line); max-width: 440px; color: var(--olive); text-align: center; }
+		.pix-box strong { display: block; margin: 5px 0 12px; font: 700 22px Arial, sans-serif; letter-spacing: 2px; }
+		.close-presentes { position: fixed; z-index: 3; top: 18px; right: 18px; padding: 10px 17px; border-radius: 999px; color: #f7f3e8; background: var(--olive); font: 700 12px Arial, sans-serif; text-decoration: none; }
+		.copy-pix { padding: 12px 20px; border: 0; border-radius: 999px; color: #f7f3e8; background: var(--olive); box-shadow: 0 5px 16px rgba(20, 25, 12, .28); cursor: pointer; font: 700 12px Arial, sans-serif; }
+		.copy-pix:focus-visible { outline: 3px solid #b9c391; outline-offset: 3px; }
+		.copy-pix.copied { background: #68764a; }
+		.confirm-page { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; padding: 20px; background: rgba(45, 47, 30, .82); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+		.confirm-page:target { opacity: 1; pointer-events: auto; }
+		.confirmations-page, .admin-page { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; padding: 20px; background: rgba(45, 47, 30, .82); opacity: 0; pointer-events: none; visibility: hidden; transform: scale(1.04) translateY(12px); transition: opacity .4s ease, transform .4s cubic-bezier(.22, .8, .25, 1), visibility .4s; }
+		.confirmations-page:target, .admin-page:target { opacity: 1; pointer-events: auto; visibility: visible; transform: scale(1) translateY(0); }
+		.confirmations-card, .admin-card { width: min(100%, 560px); max-height: calc(100vh - 40px); padding: 34px; overflow-y: auto; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); }
+		.confirmations-card h2, .admin-card h2 { margin: 0 0 8px; color: var(--olive); font-size: 32px; font-weight: 400; }
+		.confirmations-card > p, .admin-card > p { margin: 0 0 22px; color: #77765e; line-height: 1.5; }
+		.confirmations-list { margin: 0; padding-left: 24px; color: #5d6547; font: 16px/1.8 Arial, sans-serif; }
+		.admin-login, .admin-form { display: grid; gap: 9px; }
+		.admin-login input, .admin-form input, .admin-form select { padding: 13px 14px; border: 1px solid var(--line); color: var(--ink); background: #fffdf5; font: 16px Georgia, serif; }
+		.admin-login button, .admin-form button { padding: 13px 14px; border: 0; color: #f7f3e8; background: var(--olive); cursor: pointer; font: 700 12px Arial, sans-serif; }
+		.admin-login input:focus, .admin-form input:focus, .admin-form select:focus, .admin-login button:focus-visible, .admin-form button:focus-visible { outline: 3px solid #b9c391; outline-offset: 2px; }
+		.admin-content { display: none; }
+		.admin-card.unlocked .admin-login { display: none; }
+		.admin-card.unlocked .admin-content { display: block; }
+		.admin-message { min-height: 18px; margin: 8px 0 0; color: #9a745f; font: 12px Arial, sans-serif; }
+		.admin-gifts { margin: 24px 0 0; padding-top: 18px; border-top: 1px solid var(--line); color: #5d6547; font: 14px/1.7 Arial, sans-serif; }
+		.close-confirmations, .close-admin { display: inline-block; margin-top: 22px; color: #77765e; font: 700 12px Arial, sans-serif; text-decoration: underline; }
+		.confirm-card { width: min(100%, 430px); padding: 34px; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); text-align: center; }
+		.confirm-card h2 { margin: 0 0 8px; color: var(--olive); font-size: 32px; font-weight: 400; }
+		.confirm-card p { margin: 0 0 20px; color: #77765e; line-height: 1.5; }
+		.confirm-form { display: grid; gap: 8px; }
+		.confirm-form input { min-width: 0; flex: 1; padding: 13px 14px; border: 1px solid var(--line); color: var(--ink); background: #fffdf5; font: 16px Georgia, serif; }
+		.confirm-form select { min-width: 0; padding: 13px 14px; border: 1px solid var(--line); color: var(--ink); background: #fffdf5; font: 16px Georgia, serif; }
+		.confirm-form button { padding: 12px 14px; border: 0; color: #f7f3e8; background: var(--olive); cursor: pointer; font: 700 12px Arial, sans-serif; }
+		.confirm-form input:focus, .confirm-form select:focus, .confirm-form button:focus-visible { outline: 3px solid #b9c391; outline-offset: 2px; }
+		.gift-choice { display: grid; gap: 7px; text-align: left; }
+		.gift-choice label { color: var(--olive); font: 700 11px Arial, sans-serif; }
+		.attendees { margin: 24px 0 4px; padding-top: 18px; border-top: 1px solid var(--line); text-align: left; }
+		.attendees h3 { margin: 0 0 10px; color: var(--olive); font-size: 18px; font-weight: 400; }
+		.attendees ul { max-height: 130px; margin: 0; padding-left: 21px; color: #5d6547; line-height: 1.7; overflow-y: auto; }
+		.close-confirm { display: inline-block; margin-top: 20px; color: #77765e; font: 700 12px Arial, sans-serif; text-decoration: underline; }
+		.floating-leaves { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+		.leaf { position: absolute; width: 22px; height: 42px; border-radius: 100% 0 100% 0; background: rgba(101, 121, 75, .62); box-shadow: inset 3px 3px 5px rgba(235, 238, 206, .3); transform-origin: bottom center; animation: sway var(--speed) ease-in-out infinite; }
+		.leaf::after { content: ''; position: absolute; left: 10px; top: 4px; width: 1px; height: 36px; background: rgba(58, 76, 40, .45); transform: rotate(25deg); }
+		.leaf:nth-child(1) { top: 12%; left: 6%; --angle: -34deg; --scale: 1; --speed: 5.8s; animation-delay: -.8s; }
+		.leaf:nth-child(2) { top: 25%; right: 5%; --angle: 38deg; --scale: .78; --speed: 4.3s; animation-delay: -2.2s; }
+		.leaf:nth-child(3) { top: 46%; left: 3%; --angle: -52deg; --scale: .64; --speed: 6.7s; animation-delay: -1.5s; }
+		.leaf:nth-child(4) { top: 58%; right: 3%; --angle: 48deg; --scale: .7; --speed: 5.1s; animation-delay: -3.1s; }
+		.leaf:nth-child(5) { bottom: 24%; left: 10%; --angle: -28deg; --scale: .58; --speed: 7.2s; animation-delay: -2.7s; }
+		.leaf:nth-child(6) { bottom: 27%; right: 10%; --angle: 30deg; --scale: .6; --speed: 4.8s; animation-delay: -.4s; }
+		.leaf { top: -52px; bottom: auto; animation-name: fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+		.leaf:nth-child(1) { left: 10%; --fall-speed: 9s; --drift: 70px; animation-delay: -2s; }
+		.leaf:nth-child(2) { left: 27%; --fall-speed: 12s; --drift: -90px; animation-delay: -7s; }
+		.leaf:nth-child(3) { left: 48%; --fall-speed: 10s; --drift: 120px; animation-delay: -4s; }
+		.leaf:nth-child(4) { left: 67%; --fall-speed: 14s; --drift: -110px; animation-delay: -10s; }
+		.leaf:nth-child(5) { left: 82%; --fall-speed: 11s; --drift: 80px; animation-delay: -6s; }
+		.leaf:nth-child(6) { left: 40%; --fall-speed: 13s; --drift: -60px; animation-delay: -1s; }
+		@keyframes fall { 0% { transform: translate3d(0, -60px, 0) rotate(var(--angle)) scale(var(--scale)); opacity: 0; } 8% { opacity: .85; } 48% { transform: translate3d(var(--drift), 48vh, 0) rotate(calc(var(--angle) + 150deg)) scale(var(--scale)); } 92% { opacity: .65; } 100% { transform: translate3d(calc(var(--drift) * -0.5), 112vh, 0) rotate(calc(var(--angle) + 320deg)) scale(var(--scale)); opacity: 0; } }
+		@keyframes buttonsReveal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+		@keyframes buttonFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+		@keyframes buttonPulse { 0%, 72%, 100% { box-shadow: 0 4px 10px rgba(62, 63, 39, .12); } 82% { box-shadow: 0 0 0 7px rgba(137, 151, 120, .17), 0 4px 12px rgba(62, 63, 39, .18); } }
+		@keyframes envelopeOpen { 0% { transform: scale(.92) translateY(18px); opacity: 1; } 100% { transform: scale(1.02) translateY(-8px); opacity: 0; } }
+		@keyframes confettiFall { 0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); } 100% { opacity: 0; transform: translate3d(var(--confetti-x), var(--confetti-y), 0) rotate(540deg); } }
+		@media (max-width: 650px) { .page { padding: 0; } .invite { width: 100%; height: 100vh; } .invite::after { background-size: cover; } .invite::before { inset: 9px; } .admin-access { top: 20px; left: 20px; width: 38px; height: 38px; } .music-toggle { top: 20px; right: 20px; width: 38px; height: 38px; } .share-access { top: 72px; right: 20px; width: 38px; height: 38px; } .guest-count { top: 4%; font-size: 11px; } .countdown { top: 7%; font-size: 15px; } .buttons { grid-template-columns: repeat(2, 1fr); gap: 9px; } .button { padding: 12px 5px; } .presentes-page { padding: 0; } .presentes-card { width: 100%; max-height: 100vh; padding: 35px 20px 24px; } .presentes-grid { grid-template-columns: 1fr; gap: 18px; } .gift-category ul { columns: 1; } }
+		@media (prefers-reduced-motion: reduce) { .invite, .invite::after, .buttons, .button, .leaf, .presentes-page, .confirmations-page, .admin-page { animation: none; transition: none; } }
+	</style>
+</head>
+<body>
+	<div class="welcome-screen" id="welcomeScreen">
+		<div class="welcome-leaves" aria-hidden="true">
+			<span class="leaf"></span><span class="leaf"></span><span class="leaf"></span>
+			<span class="leaf"></span><span class="leaf"></span><span class="leaf"></span>
+		</div>
+		<div class="welcome-content">
+			<div class="date-seal">27<br>SET</div>
+			<h1>Michelle<br>&amp; Luidy</h1>
+			<p>Você está convidado para o nosso chá de casa nova</p>
+			<button class="start-button" id="startButton" type="button">Começar</button>
+		</div>
+	</div>
+	<main class="page">
+		<article class="invite" aria-label="Convite para o chá de casa nova de Michelle e Luidy">
+			<a class="admin-access" href="#admin" aria-label="Abrir login do administrador" title="Área Admin">ADM</a>
+			<button class="music-toggle playing" id="musicToggle" type="button" aria-label="Pausar música" title="Pausar música">♫</button>
+			<button class="share-access" id="shareButton" type="button" aria-label="Compartilhar convite" title="Compartilhar convite">↗</button>
+			<audio id="inviteMusic" autoplay loop preload="auto"><source src="musica.mp3" type="audio/mpeg"></audio>
+			<div class="countdown" id="countdown" aria-live="polite">Carregando contagem...</div>
+			<div class="guest-count" id="guestCount" aria-live="polite">0 convidados confirmados</div>
+			<div class="floating-leaves" aria-hidden="true">
+				<span class="leaf"></span><span class="leaf"></span><span class="leaf"></span>
+				<span class="leaf"></span><span class="leaf"></span><span class="leaf"></span>
+			</div>
+			<nav class="buttons" aria-label="Ações do convite">
+				<a class="button" href="#confirmacao">Confirmar Presença</a>
+				<a class="button" href="https://maps.google.com/?q=Rua+das+Flores,+120" target="_blank" rel="noopener">Ver Localização</a>
+				<a class="button" href="#confirmacoes">Lista Completa</a>
+				<a class="button" href="#presentes">Presentes</a>
+			</nav>
+		</article>
+		<section id="presentes" class="presentes-page" aria-label="Lista de presentes">
+			<div class="floating-leaves" aria-hidden="true">
+				<span class="leaf"></span><span class="leaf"></span><span class="leaf"></span>
+				<span class="leaf"></span><span class="leaf"></span><span class="leaf"></span>
+			</div>
+			<a class="close-presentes" href="#">Voltar</a>
+			<div class="presentes-card">
+				<h2>Lista de Presentes</h2>
+				<p>Escolha um item com carinho para a nossa casa nova</p>
+				<div class="presentes-grid">
+					<section class="gift-category"><h3>Cozinha</h3><ul><li>Kit tapete cozinha (escuro)</li><li>Kit tapete cozinha (escuro)</li><li>Liquidificador</li><li>Batedeira</li><li>Porta ovos + faqueiro</li><li>Porta tempero + kit de pia</li><li>Kit de pote hermético (vidro)</li><li>Kit de pote de mantimentos (transparente)</li><li>Kit de concha de silicone + colher de pau</li><li>Panela de pressão</li><li>Kit de frigideira</li><li>Kit de bacia (grande)</li><li>Kit pratos</li><li>Conjunto de copo (transparente) + xícaras</li><li>Conjunto de copo (transparente) + escorredor de prato</li><li>Kit de faca + bomboniere</li><li>Travessa de vidro + boleira</li><li>Jarra de suco + tábua de corte</li><li>Garrafa de café + peneiras</li><li>Ferro de passar</li><li>Porta café + açúcar</li><li>Jogo de panela</li><li>Toalha de mesa (6)</li><li>Toalha de mesa (6)</li><li>Travessa</li><li>Fruteira</li><li>Kit de vassoura</li><li>Conjunto de sobremesa</li><li>Organizador de geladeira</li><li>Faqueiro</li><li>Kit pano de prato</li><li>Kit pano de prato</li><li>Kit de vasilhas (plástico)</li><li>Kit de forma de bolo</li><li>Tigela (vidro)</li><li>Casco do botijão</li></ul></section>
+					<section class="gift-category"><h3>Cama</h3><ul><li>Travesseiro</li><li>Travesseiro</li><li>Lençol de elástico (Queen)</li><li>Lençol de elástico (Queen)</li><li>Colcha de cama (Queen)</li><li>Colcha de cama (Queen)</li><li>Edredom (Queen)</li><li>Edredom (Queen)</li><li>Porta-travesseiro</li><li>Porta-travesseiro</li><li>Tapete de quarto</li><li>Cobre cama (Queen)</li><li>Cobre cama (Queen)</li></ul></section>
+					<section class="gift-category"><h3>Banheiro</h3><ul><li>Kit de toalha (banho, rosto)</li><li>Kit de toalha (banho, rosto)</li><li>Kit de toalha (banho, rosto)</li><li>Kit de tapete de banheiro</li><li>Kit de tapete de banheiro</li><li>Kit de tapete de banheiro</li><li>Kit de banheiro (sabonete, porta escova)</li><li>Toalhas brancas</li><li>Toalhas brancas</li><li>Lixeira (inox)</li></ul></section>
+					<section class="gift-category"><h3>Sala</h3><ul><li>Manta de sofá</li><li>Manta de sofá</li><li>Manta de sofá</li><li>Kit porta-almofada (4)</li><li>Kit porta-almofada (4)</li><li>Ventilador</li></ul></section>
+				</div>
+				<div class="pix-box"><span>Também pode presentear via Pix</span><strong>79996781014</strong><button class="copy-pix" id="copyPix" type="button">Copiar chave Pix</button></div>
+			</div>
+		</section>
+		<section id="confirmacao" class="confirm-page" aria-label="Confirmação de presença">
+			<div class="confirm-card">
+				<h2>Você vem celebrar?</h2>
+				<p>Digite seu nome e escolha o presente que você vai levar.</p>
+				<form class="confirm-form" id="confirmForm">
+					<input id="guestName" type="text" placeholder="Seu nome" autocomplete="name" required>
+					<div class="gift-choice"><label for="giftChoice">Qual presente você vai dar?</label><select id="giftChoice" required><option value="">Escolha um presente</option></select></div>
+					<button type="submit">Confirmar</button>
+				</form>
+				<div class="attendees">
+					<h3>Presenças confirmadas</h3>
+					<ul id="attendeeList"><li>Ainda não há confirmações</li></ul>
+				</div>
+				<a class="button agenda-confirm" href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Ch%C3%A1%20de%20Casa%20Nova%20-%20Michelle%20%26%20Luidy&dates=20260927T170000Z%2F20260927T200000Z&details=Ch%C3%A1%20de%20casa%20nova%20de%20Michelle%20e%20Luidy&location=Rua%20das%20Flores%2C%20120" target="_blank" rel="noopener">Adicionar à agenda</a>
+				<a class="close-confirm" href="#">Voltar ao convite</a>
+			</div>
+		</section>
+		<section id="confirmacoes" class="confirmations-page" aria-label="Lista de confirmações">
+			<div class="confirmations-card">
+				<h2>Lista de Presença</h2>
+				<p>Confira quem já confirmou presença no chá de casa nova.</p>
+				<ul class="confirmations-list" id="confirmationList"><li>Ainda não há confirmações</li></ul>
+				<a class="close-confirmations" href="#">Voltar ao convite</a>
+			</div>
+		</section>
+		<section id="admin" class="admin-page" aria-label="Área administrativa">
+			<div class="admin-card" id="adminCard">
+				<h2>Área Admin</h2>
+				<p>Adicione novos presentes à lista do convite.</p>
+				<form class="admin-login" id="adminLogin">
+					<input id="adminPassword" type="password" placeholder="Código de acesso" required>
+					<button type="submit">Entrar</button>
+				</form>
+				<div class="admin-content">
+					<form class="admin-form" id="adminGiftForm">
+						<input id="newGift" type="text" placeholder="Nome do presente" required>
+						<select id="newGiftCategory"><option value="Cozinha">Cozinha</option><option value="Cama">Cama</option><option value="Banheiro">Banheiro</option><option value="Sala">Sala</option></select>
+						<button type="submit">Adicionar presente</button>
+					</form>
+					<p class="admin-message" id="adminMessage"></p>
+					<div class="admin-gifts" id="adminGifts">Nenhum presente novo adicionado.</div>
+				</div>
+				<a class="close-admin" href="#">Voltar ao convite</a>
+			</div>
+		</section>
+	</main>
+	<script>
+		const copyPix = document.getElementById('copyPix');
+		const pixKey = '79996781014';
+		const supabaseUrl = 'https://vvjxfhlwmiwjgxggovim.supabase.co';
+		const supabaseKey = 'sb_publishable_wIKOsJ5xkzQuz8GbXrQxzA_Y8U19L12';
+		const reservationTable = `${supabaseUrl}/rest/v1/cha_casa_reservas`;
+		const musicToggle = document.getElementById('musicToggle');
+		const inviteMusic = document.getElementById('inviteMusic');
+		const countdown = document.getElementById('countdown');
+		const eventDate = new Date('2026-09-27T14:00:00-03:00');
+		function updateCountdown() {
+			const remaining = eventDate - new Date();
+			if (remaining <= 0) {
+				countdown.textContent = 'É hoje! Esperamos você';
+				return;
+			}
+			const days = Math.floor(remaining / 86400000);
+			const hours = Math.floor(remaining / 3600000) % 24;
+			const minutes = Math.floor(remaining / 60000) % 60;
+			countdown.textContent = `${days}d ${hours}h ${minutes}min para o nosso chá`;
+		}
+		updateCountdown();
+		setInterval(updateCountdown, 60000);
+
+		document.getElementById('shareButton').addEventListener('click', async () => {
+			const shareData = { title: 'Chá de casa nova - Michelle & Luidy', text: 'Você está convidado para o nosso chá de casa nova!', url: window.location.href.split('#')[0] };
+			if (navigator.share) {
+				await navigator.share(shareData).catch(() => {});
+				return;
+			}
+			window.open(`https://wa.me/?text=${encodeURIComponent(`${shareData.text} ${shareData.url}`)}`, '_blank', 'noopener');
+		});
+		const welcomeScreen = document.getElementById('welcomeScreen');
+		const startButton = document.getElementById('startButton');
+		let musicStarting = false;
+		inviteMusic.load();
+		startButton.addEventListener('click', () => {
+			createConfetti();
+			welcomeScreen.classList.add('started');
+			inviteMusic.play().then(() => {
+				musicToggle.classList.add('playing');
+				musicToggle.setAttribute('aria-label', 'Pausar música');
+				musicToggle.title = 'Pausar música';
+			}).catch(() => {
+				musicToggle.classList.remove('playing');
+			});
+		});
+		function createConfetti() {
+			const colors = ['#3d4522', '#899778', '#b68b66', '#d1b97e'];
+			for (let index = 0; index < 34; index += 1) {
+				const piece = document.createElement('span');
+				piece.className = 'confetti';
+				piece.style.setProperty('--confetti-color', colors[index % colors.length]);
+				piece.style.setProperty('--confetti-x', `${(Math.random() - .5) * 90}vw`);
+				piece.style.setProperty('--confetti-y', `${55 + Math.random() * 55}vh`);
+				piece.style.setProperty('--confetti-rotate', `${Math.random() * 90}deg`);
+				piece.style.animationDelay = `${Math.random() * .22}s`;
+				welcomeScreen.appendChild(piece);
+				setTimeout(() => piece.remove(), 2300);
+			}
+		}
+		inviteMusic.play().catch(() => {
+			musicToggle.classList.remove('playing');
+			musicToggle.setAttribute('aria-label', 'Tocar música');
+			musicToggle.title = 'Tocar música';
+		});
+		function startMusicFromTouch(event) {
+			const target = event.target instanceof Element ? event.target : null;
+			if (target?.closest('#musicToggle') || !inviteMusic.paused || musicStarting) return;
+			musicStarting = true;
+			inviteMusic.load();
+			inviteMusic.play().then(() => {
+				musicToggle.classList.add('playing');
+				musicToggle.setAttribute('aria-label', 'Pausar música');
+				musicToggle.title = 'Pausar música';
+				document.removeEventListener('pointerdown', startMusicFromTouch, true);
+				document.removeEventListener('touchstart', startMusicFromTouch, true);
+				document.removeEventListener('touchmove', startMusicFromTouch, true);
+				document.removeEventListener('touchend', startMusicFromTouch, true);
+				document.removeEventListener('pointerup', startMusicFromTouch, true);
+				document.removeEventListener('click', startMusicFromTouch, true);
+			}).catch(() => { musicStarting = false; });
+		}
+		document.addEventListener('pointerdown', startMusicFromTouch, true);
+		document.addEventListener('pointerup', startMusicFromTouch, true);
+		document.addEventListener('touchstart', startMusicFromTouch, { capture: true, passive: true });
+		document.addEventListener('touchmove', startMusicFromTouch, { capture: true, passive: true });
+		document.addEventListener('touchend', startMusicFromTouch, { capture: true, passive: true });
+		document.addEventListener('click', startMusicFromTouch, true);
+
+		musicToggle.addEventListener('click', async () => {
+			if (!inviteMusic.paused) {
+				inviteMusic.pause();
+				musicToggle.classList.remove('playing');
+				musicToggle.setAttribute('aria-label', 'Tocar música');
+				musicToggle.title = 'Tocar música';
+				return;
+			}
+			inviteMusic.load();
+			await inviteMusic.play();
+			musicToggle.classList.add('playing');
+			musicToggle.setAttribute('aria-label', 'Pausar música');
+			musicToggle.title = 'Pausar música';
+		});
+
+		copyPix.addEventListener('click', async () => {
+			try {
+				await navigator.clipboard.writeText(pixKey);
+			} catch (error) {
+				const input = document.createElement('textarea');
+				input.value = pixKey;
+				document.body.appendChild(input);
+				input.select();
+				document.execCommand('copy');
+				input.remove();
+			}
+			copyPix.textContent = 'Chave Pix copiada!';
+			copyPix.classList.add('copied');
+			setTimeout(() => {
+				copyPix.textContent = 'Copiar chave Pix';
+				copyPix.classList.remove('copied');
+			}, 2200);
+		});
+
+		const confirmForm = document.getElementById('confirmForm');
+		const guestName = document.getElementById('guestName');
+		const giftChoice = document.getElementById('giftChoice');
+		const attendeeList = document.getElementById('attendeeList');
+		const guestCount = document.getElementById('guestCount');
+		const confirmationList = document.getElementById('confirmationList');
+		const storedGifts = JSON.parse(localStorage.getItem('chaCasaNovaExtraGifts') || '[]');
+		storedGifts.forEach((gift) => {
+			const category = [...document.querySelectorAll('.gift-category')].find((section) => section.querySelector('h3').textContent === gift.category);
+			if (category) {
+				const item = document.createElement('li');
+				item.textContent = gift.name;
+				category.querySelector('ul').appendChild(item);
+			}
+		});
+		let presentItems = [...document.querySelectorAll('.gift-category li')];
+		const storedGuests = JSON.parse(localStorage.getItem('chaCasaNovaGuests') || '[]');
+		const savedGuests = storedGuests.map((guest) => typeof guest === 'string' ? { name: guest, gift: '' } : guest);
+		let remoteReady = false;
+		const supabaseHeaders = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' };
+
+		function renderGuests() {
+			guestCount.textContent = `${savedGuests.length} ${savedGuests.length === 1 ? 'convidado confirmado' : 'convidados confirmados'}`;
+			attendeeList.replaceChildren();
+			if (!savedGuests.length) {
+				const emptyItem = document.createElement('li');
+				emptyItem.textContent = 'Ainda não há confirmações';
+				attendeeList.appendChild(emptyItem);
+				return;
+			}
+			savedGuests.forEach((guest) => {
+				const guestItem = document.createElement('li');
+				guestItem.textContent = guest.name;
+				attendeeList.appendChild(guestItem);
+			});
+		}
+
+		function renderGiftOptions() {
+			giftChoice.replaceChildren(new Option('Escolha um presente', ''));
+			presentItems.forEach((item, index) => {
+				const gift = item.textContent.trim();
+				const option = new Option(gift, String(index));
+				option.disabled = savedGuests.some((guest) => guest.giftIndex === index);
+				giftChoice.add(option);
+				item.classList.toggle('claimed', option.disabled);
+			});
+		}
+
+		confirmForm.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const name = guestName.value.trim();
+			const giftIndex = Number(giftChoice.value);
+			const gift = presentItems[giftIndex]?.textContent.trim();
+			if (!name || !gift || savedGuests.some((guest) => guest.name === name || guest.giftIndex === giftIndex)) return;
+			const reservation = { guest_name: name, gift_name: gift, gift_index: giftIndex };
+			if (remoteReady) {
+				const response = await fetch(reservationTable, { method: 'POST', headers: { ...supabaseHeaders, Prefer: 'return=minimal' }, body: JSON.stringify(reservation) });
+				if (!response.ok) {
+					alert(response.status === 409 ? 'Esse presente acabou de ser escolhido por outra pessoa.' : 'Não foi possível salvar a confirmação.');
+					await loadSharedReservations();
+					return;
+				}
+				savedGuests.push({ name, gift, giftIndex });
+			} else {
+				savedGuests.push({ name, gift, giftIndex });
+			}
+			localStorage.setItem('chaCasaNovaGuests', JSON.stringify(savedGuests));
+			guestName.value = '';
+			giftChoice.value = '';
+			renderGuests();
+			renderGiftOptions();
+		});
+
+		async function loadSharedReservations() {
+			try {
+				const response = await fetch(`${reservationTable}?select=guest_name,gift_name,gift_index&order=created_at.asc`, { headers: supabaseHeaders });
+				if (!response.ok) return;
+				const reservations = await response.json();
+				savedGuests.splice(0, savedGuests.length, ...reservations.map((reservation) => ({ name: reservation.guest_name, gift: reservation.gift_name, giftIndex: reservation.gift_index })));
+				remoteReady = true;
+				localStorage.setItem('chaCasaNovaGuests', JSON.stringify(savedGuests));
+				renderGuests();
+				renderConfirmationList();
+				renderGiftOptions();
+			} catch (error) {
+				remoteReady = false;
+			}
+		}
+
+		function renderConfirmationList() {
+			confirmationList.replaceChildren();
+			if (!savedGuests.length) {
+				const emptyItem = document.createElement('li');
+				emptyItem.textContent = 'Ainda não há confirmações';
+				confirmationList.appendChild(emptyItem);
+				return;
+			}
+			savedGuests.forEach((guest) => {
+				const guestItem = document.createElement('li');
+				guestItem.textContent = guest.name;
+				confirmationList.appendChild(guestItem);
+			});
+		}
+
+		const adminCard = document.getElementById('adminCard');
+		const adminMessage = document.getElementById('adminMessage');
+		document.getElementById('adminLogin').addEventListener('submit', (event) => {
+			event.preventDefault();
+			if (document.getElementById('adminPassword').value !== '1234') {
+				adminMessage.textContent = 'Código incorreto.';
+				return;
+			}
+			adminCard.classList.add('unlocked');
+			document.getElementById('adminPassword').value = '';
+		});
+
+		const adminGifts = document.getElementById('adminGifts');
+		function renderAdminGifts() {
+			adminGifts.textContent = storedGifts.length
+				? `Presentes adicionados: ${storedGifts.map((gift) => `${gift.name} (${gift.category})`).join(', ')}`
+				: 'Nenhum presente novo adicionado.';
+		}
+
+		document.getElementById('adminGiftForm').addEventListener('submit', (event) => {
+			event.preventDefault();
+			const name = document.getElementById('newGift').value.trim();
+			const categoryName = document.getElementById('newGiftCategory').value;
+			if (!name) return;
+			const category = [...document.querySelectorAll('.gift-category')].find((section) => section.querySelector('h3').textContent === categoryName);
+			const item = document.createElement('li');
+			item.textContent = name;
+			category.querySelector('ul').appendChild(item);
+			presentItems = [...document.querySelectorAll('.gift-category li')];
+			storedGifts.push({ name, category: categoryName });
+			localStorage.setItem('chaCasaNovaExtraGifts', JSON.stringify(storedGifts));
+			document.getElementById('newGift').value = '';
+			adminMessage.textContent = 'Presente adicionado com sucesso.';
+			renderAdminGifts();
+			renderGiftOptions();
+		});
+
+		renderGuests();
+		renderConfirmationList();
+		renderGiftOptions();
+		renderAdminGifts();
+		loadSharedReservations();
+		setInterval(loadSharedReservations, 8000);
+	</script>
+</body>
+</html>
