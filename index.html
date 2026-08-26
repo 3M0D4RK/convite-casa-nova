@@ -98,6 +98,10 @@
 		.admin-card.unlocked .admin-content { display: block; }
 		.admin-message { min-height: 18px; margin: 8px 0 0; color: #9a745f; font: 12px Arial, sans-serif; }
 		.admin-gifts { margin: 24px 0 0; padding-top: 18px; border-top: 1px solid var(--line); color: #5d6547; font: 14px/1.7 Arial, sans-serif; }
+		.admin-gift-row, .admin-guest-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid rgba(61, 69, 34, .12); }
+		.admin-gift-row button, .admin-guest-row button { flex: 0 0 auto; padding: 5px 9px; border: 1px solid rgba(154, 116, 95, .45); border-radius: 999px; color: #9a745f; background: transparent; cursor: pointer; font: 700 10px Arial, sans-serif; }
+		.admin-gift-row button:hover, .admin-guest-row button:hover { color: #f7f3e8; background: #9a745f; }
+		.admin-section-title { margin: 24px 0 8px; color: var(--olive); font: 700 12px Arial, sans-serif; letter-spacing: .5px; }
 		.close-confirmations, .close-admin { display: inline-block; margin-top: 22px; color: #77765e; font: 700 12px Arial, sans-serif; text-decoration: underline; }
 		.confirm-card { width: min(100%, 430px); padding: 34px; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); text-align: center; }
 		.confirm-card h2 { margin: 0 0 8px; color: var(--olive); font-size: 32px; font-weight: 400; }
@@ -186,7 +190,7 @@
 					<section class="gift-category"><h3>Banheiro</h3><ul><li>Kit de toalha (banho, rosto)</li><li>Kit de toalha (banho, rosto)</li><li>Kit de toalha (banho, rosto)</li><li>Kit de tapete de banheiro</li><li>Kit de tapete de banheiro</li><li>Kit de tapete de banheiro</li><li>Kit de banheiro (sabonete, porta escova)</li><li>Toalhas brancas</li><li>Toalhas brancas</li><li>Lixeira (inox)</li></ul></section>
 					<section class="gift-category"><h3>Sala</h3><ul><li>Manta de sofá</li><li>Manta de sofá</li><li>Manta de sofá</li><li>Kit porta-almofada (4)</li><li>Kit porta-almofada (4)</li><li>Ventilador</li></ul></section>
 				</div>
-				<div class="pix-box"><span>Também pode presentear via Pix</span><strong>79996781014</strong><button class="copy-pix" id="copyPix" type="button">Copiar chave Pix</button></div>
+				<div class="pix-box"><span>Também pode presentear via Pix</span><strong id="pixValue">79996781014</strong><button class="copy-pix" id="copyPix" type="button" aria-label="Copiar chave PIX">Copiar chave Pix</button></div>
 			</div>
 		</section>
 		<section id="confirmacao" class="confirm-page" aria-label="Confirmação de presença">
@@ -229,7 +233,10 @@
 						<button type="submit">Adicionar presente</button>
 					</form>
 					<p class="admin-message" id="adminMessage"></p>
+					<div class="admin-section-title">Presentes adicionados</div>
 					<div class="admin-gifts" id="adminGifts">Nenhum presente novo adicionado.</div>
+					<div class="admin-section-title">Convidados confirmados</div>
+					<div class="admin-gifts" id="adminGuests">Nenhum convidado confirmado.</div>
 				</div>
 				<a class="close-admin" href="#">Voltar ao convite</a>
 			</div>
@@ -238,6 +245,7 @@
 	<script>
 		const copyPix = document.getElementById('copyPix');
 		const pixKey = '79996781014';
+		document.getElementById('pixValue').textContent = pixKey;
 		const supabaseUrl = 'https://vvjxfhlwmiwjgxggovim.supabase.co';
 		const supabaseKey = 'sb_publishable_wIKOsJ5xkzQuz8GbXrQxzA_Y8U19L12';
 		const reservationTable = `${supabaseUrl}/rest/v1/cha_casa_reservas`;
@@ -387,6 +395,7 @@
 				if (!category) return;
 				const item = document.createElement('li');
 				item.textContent = gift.name;
+				item.dataset.giftId = gift.id || '';
 				category.querySelector('ul').appendChild(item);
 				seen.add(key);
 			});
@@ -445,19 +454,21 @@
 			guestName.value = '';
 			giftChoice.value = '';
 			renderGuests();
+			renderAdminGuests();
 			renderGiftOptions();
 		});
 
 		async function loadSharedReservations() {
 			try {
-				const response = await fetch(`${reservationTable}?select=guest_name,gift_name,gift_index&order=created_at.asc`, { headers: supabaseHeaders });
+				const response = await fetch(`${reservationTable}?select=id,guest_name,gift_name,gift_index&order=created_at.asc`, { headers: supabaseHeaders });
 				if (!response.ok) return;
 				const reservations = await response.json();
-				savedGuests.splice(0, savedGuests.length, ...reservations.map((reservation) => ({ name: reservation.guest_name, gift: reservation.gift_name, giftIndex: reservation.gift_index })));
+				savedGuests.splice(0, savedGuests.length, ...reservations.map((reservation) => ({ id: reservation.id, name: reservation.guest_name, gift: reservation.gift_name, giftIndex: reservation.gift_index })));
 				remoteReady = true;
 				localStorage.setItem('chaCasaNovaGuests', JSON.stringify(savedGuests));
 				renderGuests();
 				renderConfirmationList();
+				renderAdminGuests();
 				renderGiftOptions();
 			} catch (error) {
 				remoteReady = false;
@@ -471,7 +482,7 @@
 				const remoteGifts = await response.json();
 				const mergedGifts = [
 					...storedGifts,
-					...remoteGifts.map((gift) => ({ name: gift.name, category: gift.category }))
+					...remoteGifts.map((gift) => ({ id: gift.id, name: gift.name, category: gift.category }))
 				];
 				const uniqueGifts = [];
 				const seen = new Set();
@@ -480,7 +491,7 @@
 					const key = `${gift.category}::${gift.name}`;
 					if (seen.has(key)) return;
 					seen.add(key);
-					uniqueGifts.push({ name: gift.name, category: gift.category });
+					uniqueGifts.push({ id: gift.id, name: gift.name, category: gift.category });
 				});
 				storedGifts.splice(0, storedGifts.length, ...uniqueGifts);
 				localStorage.setItem('chaCasaNovaExtraGifts', JSON.stringify(storedGifts));
@@ -520,10 +531,74 @@
 		});
 
 		const adminGifts = document.getElementById('adminGifts');
+		const adminGuests = document.getElementById('adminGuests');
 		function renderAdminGifts() {
-			adminGifts.textContent = storedGifts.length
-				? `Presentes adicionados: ${storedGifts.map((gift) => `${gift.name} (${gift.category})`).join(', ')}`
-				: 'Nenhum presente novo adicionado.';
+			adminGifts.replaceChildren();
+			if (!storedGifts.length) {
+				adminGifts.textContent = 'Nenhum presente novo adicionado.';
+				return;
+			}
+			storedGifts.forEach((gift, index) => {
+				const row = document.createElement('div');
+				row.className = 'admin-gift-row';
+				const label = document.createElement('span');
+				label.textContent = `${gift.name} (${gift.category})`;
+				const removeButton = document.createElement('button');
+				removeButton.type = 'button';
+				removeButton.textContent = 'Remover';
+				removeButton.addEventListener('click', () => removeGift(gift, index));
+				row.append(label, removeButton);
+				adminGifts.appendChild(row);
+			});
+		}
+
+		function renderAdminGuests() {
+			adminGuests.replaceChildren();
+			if (!savedGuests.length) {
+				adminGuests.textContent = 'Nenhum convidado confirmado.';
+				return;
+			}
+			savedGuests.forEach((guest, index) => {
+				const row = document.createElement('div');
+				row.className = 'admin-guest-row';
+				const label = document.createElement('span');
+				label.textContent = guest.name;
+				const removeButton = document.createElement('button');
+				removeButton.type = 'button';
+				removeButton.textContent = 'Remover';
+				removeButton.addEventListener('click', () => removeGuest(guest, index));
+				row.append(label, removeButton);
+				adminGuests.appendChild(row);
+			});
+		}
+
+		async function removeGift(gift, index) {
+			if (!window.confirm(`Remover o presente "${gift.name}"?`)) return;
+			if (gift.id && remoteReady) {
+				const response = await fetch(`${giftsTable}?id=eq.${gift.id}`, { method: 'DELETE', headers: supabaseHeaders });
+				if (!response.ok) { adminMessage.textContent = 'Não foi possível remover o presente online.'; return; }
+			}
+			storedGifts.splice(index, 1);
+			localStorage.setItem('chaCasaNovaExtraGifts', JSON.stringify(storedGifts));
+			syncGiftCatalog();
+			renderAdminGifts();
+			renderGiftOptions();
+			adminMessage.textContent = 'Presente removido.';
+		}
+
+		async function removeGuest(guest, index) {
+			if (!window.confirm(`Remover o convidado "${guest.name}"?`)) return;
+			if (guest.id && remoteReady) {
+				const response = await fetch(`${reservationTable}?id=eq.${guest.id}`, { method: 'DELETE', headers: supabaseHeaders });
+				if (!response.ok) { adminMessage.textContent = 'Não foi possível remover o convidado online.'; return; }
+			}
+			savedGuests.splice(index, 1);
+			localStorage.setItem('chaCasaNovaGuests', JSON.stringify(savedGuests));
+			renderGuests();
+			renderConfirmationList();
+			renderAdminGuests();
+			renderGiftOptions();
+			adminMessage.textContent = 'Convidado removido.';
 		}
 
 		document.getElementById('adminGiftForm').addEventListener('submit', async (event) => {
@@ -556,6 +631,7 @@
 				adminMessage.textContent = 'Presente salvo localmente. Sincronização com todos os navegadores falhou.';
 			}
 			renderAdminGifts();
+			renderAdminGuests();
 			renderGiftOptions();
 		});
 
