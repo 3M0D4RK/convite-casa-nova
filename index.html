@@ -149,6 +149,21 @@
 		@keyframes confettiFall { 0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); } 100% { opacity: 0; transform: translate3d(var(--confetti-x), var(--confetti-y), 0) rotate(540deg); } }
 		@media (max-width: 650px) { .page { padding: 0; } .invite { width: 100%; height: 100vh; } .invite::after { background-size: cover; } .invite::before { inset: 9px; } .admin-access { top: 20px; left: 20px; width: 38px; height: 38px; } .music-toggle { top: 20px; right: 20px; width: 38px; height: 38px; } .share-access { top: 72px; right: 20px; width: 38px; height: 38px; } .guest-count { top: 4%; font-size: 11px; } .countdown { top: 7%; font-size: 15px; } .buttons { grid-template-columns: repeat(2, 1fr); gap: 9px; } .button { padding: 12px 5px; animation: none; } .presentes-page, .confirmations-page, .admin-page, .location-page { transform: none; -webkit-transform: none; transition: opacity .2s ease, visibility .2s ease; z-index: 40; } .presentes-page { padding: 0; } .presentes-card { width: 100%; max-height: 100vh; padding: 35px 20px 24px; } .presentes-grid { grid-template-columns: 1fr; gap: 18px; } .gift-category ul { columns: 1; } .presentes-card, .confirmations-card, .admin-card { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; } }
 		@media (prefers-reduced-motion: reduce) { .invite, .invite::after, .buttons, .button, .leaf, .presentes-page, .confirmations-page, .admin-page, .location-page { animation: none; transition: none; } }
+		/* A lista de presentes deve ficar por cima da janela principal do convite. */
+		.presentes-page { position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
+		.presentes-page:target { opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; }
+		.presentes-card { position: relative !important; z-index: 10000 !important; }
+		/* Seletores personalizados para celular */
+		.custom-select { position: relative; width: 100%; }
+		.custom-select select { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+		.custom-select-trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 13px 14px; border: 1px solid var(--line); color: var(--ink); background: #fffdf5; cursor: pointer; font: 16px Georgia, serif; text-align: left; }
+		.custom-select-trigger::after { content: '⌄'; margin-left: 12px; color: var(--olive); font: 700 18px Arial, sans-serif; }
+		.custom-select.open .custom-select-trigger { border-color: #9aa477; outline: 3px solid rgba(185, 195, 145, .45); }
+		.custom-select-options { position: absolute; z-index: 10001; top: calc(100% + 5px); left: 0; right: 0; display: none; max-height: 210px; padding: 5px; overflow-y: auto; border: 1px solid var(--line); background: #fffdf5; box-shadow: 0 8px 22px rgba(46, 48, 28, .2); }
+		.custom-select.open .custom-select-options { display: block; }
+		.custom-select-option { width: 100%; padding: 11px 10px; border: 0; color: var(--ink); background: transparent; cursor: pointer; font: 15px Georgia, serif; text-align: left; }
+		.custom-select-option:hover, .custom-select-option.selected { color: #f7f3e8; background: var(--olive); }
+		.custom-select-option:disabled { color: #aaa998; background: transparent; cursor: not-allowed; text-decoration: line-through; }
 	</style>
 </head>
 <body>
@@ -398,6 +413,59 @@
 		let remoteReady = false;
 		let giftsRemoteReady = false;
 		const giftsTable = `${supabaseUrl}/rest/v1/cha_casa_presentes`;
+
+		function createCustomSelect(select) {
+			if (select.closest('.custom-select')) return;
+			const wrapper = document.createElement('div');
+			wrapper.className = 'custom-select';
+			select.parentNode.insertBefore(wrapper, select);
+			wrapper.appendChild(select);
+			const trigger = document.createElement('button');
+			trigger.type = 'button';
+			trigger.className = 'custom-select-trigger';
+			trigger.setAttribute('aria-haspopup', 'listbox');
+			const optionsBox = document.createElement('div');
+			optionsBox.className = 'custom-select-options';
+			optionsBox.setAttribute('role', 'listbox');
+			wrapper.append(trigger, optionsBox);
+
+			function refresh() {
+				const selected = select.options[select.selectedIndex];
+				trigger.textContent = selected?.textContent || 'Escolha uma opção';
+				optionsBox.replaceChildren();
+				[...select.options].forEach((option) => {
+					const item = document.createElement('button');
+					item.type = 'button';
+					item.className = 'custom-select-option';
+					item.textContent = option.textContent;
+					item.disabled = option.disabled;
+					item.classList.toggle('selected', option.value === select.value);
+					item.addEventListener('click', () => {
+						select.value = option.value;
+						select.dispatchEvent(new Event('change', { bubbles: true }));
+						wrapper.classList.remove('open');
+					});
+					optionsBox.appendChild(item);
+				});
+			}
+
+			trigger.addEventListener('click', () => {
+				document.querySelectorAll('.custom-select.open').forEach((item) => {
+					if (item !== wrapper) item.classList.remove('open');
+				});
+				wrapper.classList.toggle('open');
+			});
+			select.addEventListener('change', refresh);
+			new MutationObserver(refresh).observe(select, { childList: true, subtree: true, attributes: true });
+			refresh();
+		}
+
+		document.querySelectorAll('.confirm-form select, .admin-form select').forEach(createCustomSelect);
+		document.addEventListener('click', (event) => {
+			if (!(event.target instanceof Element) || !event.target.closest('.custom-select')) {
+				document.querySelectorAll('.custom-select.open').forEach((item) => item.classList.remove('open'));
+			}
+		});
 
 		function syncGiftCatalog() {
 			const seen = new Set();
