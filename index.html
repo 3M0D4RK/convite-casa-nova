@@ -65,7 +65,7 @@
 		@keyframes houseBreath { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.018); } }
 		.presentes-page { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 18px; background: rgba(45, 47, 30, .82); opacity: 0; pointer-events: none; visibility: hidden; transform: scale(1.04) translateY(12px); transition: opacity .4s ease, transform .4s cubic-bezier(.22, .8, .25, 1), visibility .4s; }
 		.presentes-page:target { opacity: 1; pointer-events: auto; visibility: visible; transform: scale(1) translateY(0); }
-		.presentes-card { position: relative; z-index: 2; width: min(100%, 980px); max-height: calc(100vh - 36px); padding: 34px clamp(20px, 4vw, 54px) 28px; overflow-y: auto; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); }
+		.presentes-card { position: relative; z-index: 2; width: min(100%, 980px); max-height: calc(100vh - 36px); padding: 34px clamp(20px, 4vw, 54px) 28px; overflow-y: auto; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 		.presentes-card h2 { margin: 0; color: var(--olive); font-size: clamp(30px, 5vw, 54px); font-weight: 400; text-align: center; }
 		.presentes-card > p { margin: 8px 0 26px; color: #77765e; font: 16px Arial, sans-serif; text-align: center; }
 		.presentes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px 44px; }
@@ -93,7 +93,7 @@
 		.location-address { margin: 0 0 25px; padding: 17px; border: 1px solid var(--line); color: var(--olive); font: 700 16px/1.5 'Trebuchet MS', Arial, sans-serif; }
 		.location-map { display: inline-block; margin: 0; }
 		.close-location { display: block; margin-top: 20px; color: #77765e; font: 700 12px Arial, sans-serif; text-decoration: underline; }
-		.confirmations-card, .admin-card { width: min(100%, 560px); max-height: calc(100vh - 40px); padding: 34px; overflow-y: auto; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); }
+		.confirmations-card, .admin-card { width: min(100%, 560px); max-height: calc(100vh - 40px); padding: 34px; overflow-y: auto; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 		.confirmations-card h2, .admin-card h2 { margin: 0 0 8px; color: var(--olive); font-size: 32px; font-weight: 400; }
 		.confirmations-card > p, .admin-card > p { margin: 0 0 22px; color: #77765e; line-height: 1.5; }
 		.confirmations-list { margin: 0; padding-left: 24px; color: #5d6547; font: 16px/1.8 Arial, sans-serif; }
@@ -147,7 +147,7 @@
 		@keyframes buttonPulse { 0%, 72%, 100% { box-shadow: 0 4px 10px rgba(62, 63, 39, .12); } 82% { box-shadow: 0 0 0 7px rgba(137, 151, 120, .17), 0 4px 12px rgba(62, 63, 39, .18); } }
 		@keyframes envelopeOpen { 0% { transform: scale(.92) translateY(18px); opacity: 1; } 100% { transform: scale(1.02) translateY(-8px); opacity: 0; } }
 		@keyframes confettiFall { 0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); } 100% { opacity: 0; transform: translate3d(var(--confetti-x), var(--confetti-y), 0) rotate(540deg); } }
-		@media (max-width: 650px) { .page { padding: 0; } .invite { width: 100%; height: 100vh; } .invite::after { background-size: cover; } .invite::before { inset: 9px; } .admin-access { top: 20px; left: 20px; width: 38px; height: 38px; } .music-toggle { top: 20px; right: 20px; width: 38px; height: 38px; } .share-access { top: 72px; right: 20px; width: 38px; height: 38px; } .guest-count { top: 4%; font-size: 11px; } .countdown { top: 7%; font-size: 15px; } .buttons { grid-template-columns: repeat(2, 1fr); gap: 9px; } .button { padding: 12px 5px; } .presentes-page { padding: 0; } .presentes-card { width: 100%; max-height: 100vh; padding: 35px 20px 24px; } .presentes-grid { grid-template-columns: 1fr; gap: 18px; } .gift-category ul { columns: 1; } }
+		@media (max-width: 650px) { .page { padding: 0; } .invite { width: 100%; height: 100vh; } .invite::after { background-size: cover; } .invite::before { inset: 9px; } .admin-access { top: 20px; left: 20px; width: 38px; height: 38px; } .music-toggle { top: 20px; right: 20px; width: 38px; height: 38px; } .share-access { top: 72px; right: 20px; width: 38px; height: 38px; } .guest-count { top: 4%; font-size: 11px; } .countdown { top: 7%; font-size: 15px; } .buttons { grid-template-columns: repeat(2, 1fr); gap: 9px; } .button { padding: 12px 5px; animation: none; } .presentes-page, .confirmations-page, .admin-page, .location-page { transform: none; -webkit-transform: none; transition: opacity .2s ease, visibility .2s ease; } .presentes-page { padding: 0; } .presentes-card { width: 100%; max-height: 100vh; padding: 35px 20px 24px; } .presentes-grid { grid-template-columns: 1fr; gap: 18px; } .gift-category ul { columns: 1; } .presentes-card, .confirmations-card, .admin-card { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; } }
 		@media (prefers-reduced-motion: reduce) { .invite, .invite::after, .buttons, .button, .leaf, .presentes-page, .confirmations-page, .admin-page, .location-page { animation: none; transition: none; } }
 	</style>
 </head>
