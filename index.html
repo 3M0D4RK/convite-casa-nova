@@ -423,6 +423,7 @@
 		}
 
 		function renderGiftOptions() {
+			const selectedGiftIndex = giftChoice.value;
 			giftChoice.replaceChildren(new Option('Escolha um presente', ''));
 			presentItems.forEach((item, index) => {
 				const gift = item.textContent.trim();
@@ -431,6 +432,9 @@
 				giftChoice.add(option);
 				item.classList.toggle('claimed', option.disabled);
 			});
+			if (selectedGiftIndex && giftChoice.querySelector(`option[value="${selectedGiftIndex}"]:not(:disabled)`)) {
+				giftChoice.value = selectedGiftIndex;
+			}
 		}
 
 		confirmForm.addEventListener('submit', async (event) => {
