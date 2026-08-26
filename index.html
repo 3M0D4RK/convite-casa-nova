@@ -207,6 +207,7 @@
 				<p>Digite seu nome e escolha o presente que você vai levar.</p>
 				<form class="confirm-form" id="confirmForm">
 					<input id="guestName" type="text" placeholder="Seu nome" autocomplete="name" required>
+					<div class="gift-choice"><label for="giftCategory">Categoria do presente</label><select id="giftCategory" required><option value="">Escolha uma categoria</option></select></div>
 					<div class="gift-choice"><label for="giftChoice">Qual presente você vai dar?</label><select id="giftChoice" required><option value="">Escolha um presente</option></select></div>
 					<button type="submit">Confirmar</button>
 				</form>
@@ -386,6 +387,7 @@
 
 		const confirmForm = document.getElementById('confirmForm');
 		const guestName = document.getElementById('guestName');
+		const giftCategory = document.getElementById('giftCategory');
 		const giftChoice = document.getElementById('giftChoice');
 		const attendeeList = document.getElementById('attendeeList');
 		const guestCount = document.getElementById('guestCount');
@@ -420,8 +422,8 @@
 			presentItems = [...document.querySelectorAll('.gift-category li')];
 		}
 		let presentItems = [...document.querySelectorAll('.gift-category li')];
-		syncGiftCatalog();
-		const supabaseHeaders = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' };
+		syncGiftCatalog();			renderGiftCategories();
+			renderGiftOptions();		const supabaseHeaders = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json' };
 
 		function renderGuests() {
 			guestCount.textContent = `${savedGuests.length} ${savedGuests.length === 1 ? 'convidado confirmado' : 'convidados confirmados'}`;
@@ -439,10 +441,31 @@
 			});
 		}
 
+		function renderGiftCategories() {
+			const currentCategory = giftCategory.value;
+			giftCategory.replaceChildren(new Option('Escolha uma categoria', ''));
+			const categories = [...new Set(
+				presentItems
+					.map((item) => item.closest('.gift-category')?.querySelector('h3')?.textContent?.trim())
+					.filter(Boolean)
+			)];
+			categories.forEach((categoryName) => {
+				const option = new Option(categoryName, categoryName);
+				giftCategory.add(option);
+			});
+			if (currentCategory && categories.includes(currentCategory)) {
+				giftCategory.value = currentCategory;
+			}
+		}
+
 		function renderGiftOptions() {
-			const selectedGift = giftChoice.selectedOptions[0]?.textContent;
+			const selectedCategory = giftCategory.value;
+			const selectedGift = giftChoice.value;
 			giftChoice.replaceChildren(new Option('Escolha um presente', ''));
-			presentItems.forEach((item, index) => {
+			if (!selectedCategory) return;
+			const categoryItems = presentItems.filter((item) => item.closest('.gift-category')?.querySelector('h3')?.textContent?.trim() === selectedCategory);
+			categoryItems.forEach((item) => {
+				const index = presentItems.indexOf(item);
 				const gift = item.textContent.trim();
 				const option = new Option(gift, String(index));
 				option.disabled = savedGuests.some((guest) => guest.giftIndex === index);
@@ -450,10 +473,17 @@
 				item.classList.toggle('claimed', option.disabled);
 			});
 			if (selectedGift) {
-				const matchingOption = [...giftChoice.options].find((option) => option.textContent === selectedGift && !option.disabled);
-				if (matchingOption) giftChoice.value = matchingOption.value;
+				const matchingOption = [...giftChoice.options].find((option) => option.value === selectedGift && !option.disabled);
+				if (matchingOption) {
+					giftChoice.value = matchingOption.value;
+				}
 			}
 		}
+
+		giftCategory.addEventListener('change', () => {
+			giftChoice.value = '';
+			renderGiftOptions();
+		});
 
 		confirmForm.addEventListener('submit', async (event) => {
 			event.preventDefault();
@@ -661,6 +691,7 @@
 
 		renderGuests();
 		renderConfirmationList();
+		renderGiftCategories();
 		renderGiftOptions();
 		renderAdminGifts();
 		loadSharedReservations();
