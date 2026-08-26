@@ -377,6 +377,7 @@
 		const storedGuests = JSON.parse(localStorage.getItem('chaCasaNovaGuests') || '[]');
 		const savedGuests = storedGuests.map((guest) => typeof guest === 'string' ? { name: guest, gift: '' } : guest);
 		let remoteReady = false;
+		let giftsRemoteReady = false;
 		const giftsTable = `${supabaseUrl}/rest/v1/cha_casa_presentes`;
 
 		function syncGiftCatalog() {
@@ -477,9 +478,10 @@
 
 		async function loadSharedGifts() {
 			try {
-				const response = await fetch(`${giftsTable}?select=name,category&order=created_at.asc`, { headers: supabaseHeaders });
+				const response = await fetch(`${giftsTable}?select=id,name,category&order=created_at.asc`, { headers: supabaseHeaders });
 				if (!response.ok) return;
 				const remoteGifts = await response.json();
+				giftsRemoteReady = true;
 				const mergedGifts = [
 					...storedGifts,
 					...remoteGifts.map((gift) => ({ id: gift.id, name: gift.name, category: gift.category }))
@@ -574,7 +576,7 @@
 
 		async function removeGift(gift, index) {
 			if (!window.confirm(`Remover o presente "${gift.name}"?`)) return;
-			if (gift.id && remoteReady) {
+			if (gift.id && giftsRemoteReady) {
 				const response = await fetch(`${giftsTable}?id=eq.${gift.id}`, { method: 'DELETE', headers: supabaseHeaders });
 				if (!response.ok) { adminMessage.textContent = 'Não foi possível remover o presente online.'; return; }
 			}
