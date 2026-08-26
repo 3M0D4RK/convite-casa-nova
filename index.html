@@ -85,6 +85,14 @@
 		.confirm-page:target { opacity: 1; pointer-events: auto; }
 		.confirmations-page, .admin-page { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; padding: 20px; background: rgba(45, 47, 30, .82); opacity: 0; pointer-events: none; visibility: hidden; transform: scale(1.04) translateY(12px); transition: opacity .4s ease, transform .4s cubic-bezier(.22, .8, .25, 1), visibility .4s; }
 		.confirmations-page:target, .admin-page:target { opacity: 1; pointer-events: auto; visibility: visible; transform: scale(1) translateY(0); }
+		.location-page { position: fixed; inset: 0; z-index: 13; display: grid; place-items: center; padding: 20px; background: rgba(45, 47, 30, .82); opacity: 0; pointer-events: none; visibility: hidden; transform: scale(1.04) translateY(12px); transition: opacity .4s ease, transform .4s cubic-bezier(.22, .8, .25, 1), visibility .4s; }
+		.location-page:target { opacity: 1; pointer-events: auto; visibility: visible; transform: scale(1) translateY(0); }
+		.location-card { width: min(100%, 440px); padding: 36px 30px; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); text-align: center; }
+		.location-card h2 { margin: 0 0 10px; color: var(--olive); font-size: 34px; font-weight: 400; }
+		.location-card p { margin: 0 0 24px; color: #77765e; line-height: 1.55; }
+		.location-address { margin: 0 0 25px; padding: 17px; border: 1px solid var(--line); color: var(--olive); font: 700 16px/1.5 'Trebuchet MS', Arial, sans-serif; }
+		.location-map { display: inline-block; margin: 0; }
+		.close-location { display: block; margin-top: 20px; color: #77765e; font: 700 12px Arial, sans-serif; text-decoration: underline; }
 		.confirmations-card, .admin-card { width: min(100%, 560px); max-height: calc(100vh - 40px); padding: 34px; overflow-y: auto; color: var(--ink); background: var(--paper); box-shadow: var(--shadow); }
 		.confirmations-card h2, .admin-card h2 { margin: 0 0 8px; color: var(--olive); font-size: 32px; font-weight: 400; }
 		.confirmations-card > p, .admin-card > p { margin: 0 0 22px; color: #77765e; line-height: 1.5; }
@@ -140,7 +148,7 @@
 		@keyframes envelopeOpen { 0% { transform: scale(.92) translateY(18px); opacity: 1; } 100% { transform: scale(1.02) translateY(-8px); opacity: 0; } }
 		@keyframes confettiFall { 0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); } 100% { opacity: 0; transform: translate3d(var(--confetti-x), var(--confetti-y), 0) rotate(540deg); } }
 		@media (max-width: 650px) { .page { padding: 0; } .invite { width: 100%; height: 100vh; } .invite::after { background-size: cover; } .invite::before { inset: 9px; } .admin-access { top: 20px; left: 20px; width: 38px; height: 38px; } .music-toggle { top: 20px; right: 20px; width: 38px; height: 38px; } .share-access { top: 72px; right: 20px; width: 38px; height: 38px; } .guest-count { top: 4%; font-size: 11px; } .countdown { top: 7%; font-size: 15px; } .buttons { grid-template-columns: repeat(2, 1fr); gap: 9px; } .button { padding: 12px 5px; } .presentes-page { padding: 0; } .presentes-card { width: 100%; max-height: 100vh; padding: 35px 20px 24px; } .presentes-grid { grid-template-columns: 1fr; gap: 18px; } .gift-category ul { columns: 1; } }
-		@media (prefers-reduced-motion: reduce) { .invite, .invite::after, .buttons, .button, .leaf, .presentes-page, .confirmations-page, .admin-page { animation: none; transition: none; } }
+		@media (prefers-reduced-motion: reduce) { .invite, .invite::after, .buttons, .button, .leaf, .presentes-page, .confirmations-page, .admin-page, .location-page { animation: none; transition: none; } }
 	</style>
 </head>
 <body>
@@ -170,7 +178,7 @@
 			</div>
 			<nav class="buttons" aria-label="Ações do convite">
 				<a class="button" href="#confirmacao">Confirmar Presença</a>
-				<a class="button" href="https://maps.google.com/?q=Rua+das+Flores,+120" target="_blank" rel="noopener">Ver Localização</a>
+				<a class="button" href="#localizacao">Ver Localização</a>
 				<a class="button" href="#confirmacoes">Lista Completa</a>
 				<a class="button" href="#presentes">Presentes</a>
 			</nav>
@@ -216,6 +224,15 @@
 				<p>Confira quem já confirmou presença no chá de casa nova.</p>
 				<ul class="confirmations-list" id="confirmationList"><li>Ainda não há confirmações</li></ul>
 				<a class="close-confirmations" href="#">Voltar ao convite</a>
+			</div>
+		</section>
+		<section id="localizacao" class="location-page" aria-label="Local do evento">
+			<div class="location-card">
+				<h2>Onde será?</h2>
+				<p>Esperamos você para celebrar esse novo lar.</p>
+				<div class="location-address">Povoado Ilhotas<br>Chácara Zé das Ilhotas</div>
+				<a class="button location-map" href="https://www.google.com/maps/search/?api=1&query=-10.747944%2C-37.774583" target="_blank" rel="noopener">Abrir no mapa</a>
+				<a class="close-location" href="#">Voltar ao convite</a>
 			</div>
 		</section>
 		<section id="admin" class="admin-page" aria-label="Área administrativa">
