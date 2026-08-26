@@ -423,7 +423,7 @@
 		}
 
 		function renderGiftOptions() {
-			const selectedGiftIndex = giftChoice.value;
+			const selectedGift = giftChoice.selectedOptions[0]?.textContent;
 			giftChoice.replaceChildren(new Option('Escolha um presente', ''));
 			presentItems.forEach((item, index) => {
 				const gift = item.textContent.trim();
@@ -432,8 +432,9 @@
 				giftChoice.add(option);
 				item.classList.toggle('claimed', option.disabled);
 			});
-			if (selectedGiftIndex && giftChoice.querySelector(`option[value="${selectedGiftIndex}"]:not(:disabled)`)) {
-				giftChoice.value = selectedGiftIndex;
+			if (selectedGift) {
+				const matchingOption = [...giftChoice.options].find((option) => option.textContent === selectedGift && !option.disabled);
+				if (matchingOption) giftChoice.value = matchingOption.value;
 			}
 		}
 
